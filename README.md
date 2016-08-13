@@ -49,6 +49,7 @@ The configuration information can be passed in via two methods
 
 # Future Improvements
 
+* The permissions given to the service account seem heavy handed. Need to restrict the account further to just `rsh`.
 * Error checking on the `oc` calls
 * remove the need for oc binary and use `curl` instead to call the OpenShift API.
 * mail on success or failure.
