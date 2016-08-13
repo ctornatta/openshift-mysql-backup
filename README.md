@@ -61,3 +61,11 @@ The configuration information can be passed in via two methods
 * Error checking on the `oc` calls
 * remove the need for oc binary and use `curl` instead to call the OpenShift API.
 * A option to mail on success or failure. Helpful for `crond` scheduling on a host not in OpenShift.
+
+# Notes
+
+Started work on removing the need to maintain the `oc` binary. Note that it does use [jq](https://stedolan.github.io/jq/) to parse the json output.
+
+```
+curl --silent -k -H "Authorization: Bearer $API_TOKEN" $OSE_API/api/v1/namespaces/$PROJECT_NAME/pods\?labelSelector=deploymentconfig=mysql-55-centos7 | jq -r ".items[].metadata.name"
+```
