@@ -48,7 +48,9 @@ echo MySQL Backup location: $BACKUP_LOC
 echo MysQL mysql dump binary: $MYSQL_DUMP_BIN
 echo OpenShift project name: $PROJECT_NAME
 echo OpenShift mysql pod: $POD_SELECTOR
-echo OpenShift project API token: $API_TOKEN
+echo Verify API TLS: $VERIFY_API_TLS
+#Uncomment if needed
+#echo OpenShift project API token: $API_TOKEN
 echo ---------------------------------------
 echo
 echo Starting MySQL backup
