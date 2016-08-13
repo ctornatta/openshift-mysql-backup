@@ -20,12 +20,22 @@ fi
 
 
 # Ensure that all configuration variables exist.
-if [ -n "${BACKUP_LOC}" -a -n "${MYSQL_DUMP_BIN}" -a -n "${OSE_API}" -a -n "${PROJECT_NAME}" -a -n "${POD_SELECTOR}" -a -n "${API_TOKEN}" ] ; then
+if [ -n "${BACKUP_LOC}" -a -n "${MYSQL_DUMP_BIN}" -a -n "${OSE_API}" -a -n "${PROJECT_NAME}" -a -n "${POD_SELECTOR}" -a -n "${API_TOKEN}" -a -n "${VERIFY_API_TLS}" ] ; then
     echo Validation of configuration variables passed..
 else
     echo Missing configuration values. Bailing...
     exit 1
 fi
+
+if [ "${VERIFY_API_TLS}" == "no" ] ; then
+  echo Not veryifing OpenShift API TLS
+  API_TLS="--insecure-skip-tls-verify=true"
+else
+  echo Verifying OpenShift API TLS
+  API_TLS=""
+fi
+
+
 
 # get the current time
 CURRENT_TIME=$(date "+%Y.%m.%d-%H.%M.%S")
@@ -45,14 +55,15 @@ echo Starting MySQL backup
 echo ---------------------------------------
 echo
 
+
 # get the mysql pod name
-DB_POD=$(oc --server=${OSE_API} --token=${API_TOKEN} -n ${PROJECT_NAME} get pods -l deploymentconfig=${POD_SELECTOR} --no-headers | awk '{print $1}')
+DB_POD=$(oc ${API_TLS} --server=${OSE_API} --token=${API_TOKEN} -n ${PROJECT_NAME} get pods -l deploymentconfig=${POD_SELECTOR} --no-headers | awk '{print $1}')
 
 # Create backup folder if it does not already exist
-oc --insecure-skip-tls-verify=true --server=${OSE_API} --token=${API_TOKEN} -n ${PROJECT_NAME} exec ${DB_POD} -- /bin/bash -c "if [ ! -d $BACKUP_LOC ] ; then echo Creating backup directory ; mkdir -p ${BACKUP_LOC} ; ls -al ${BACKUP_LOC} ; fi"
+oc ${API_TLS} --server=${OSE_API} --token=${API_TOKEN} -n ${PROJECT_NAME} exec ${DB_POD} -- /bin/bash -c "if [ ! -d $BACKUP_LOC ] ; then echo Creating backup directory ; mkdir -p ${BACKUP_LOC} ; ls -al ${BACKUP_LOC} ; fi"
 
 # Dump all the databases
-oc --insecure-skip-tls-verify=true --server=${OSE_API} --token=${API_TOKEN} -n ${PROJECT_NAME} exec ${DB_POD} -- ${MYSQL_DUMP_BIN} -u root --all-databases --result-file=${BACKUP_LOC}/full-backup.${CURRENT_TIME}.sql
+oc ${API_TLS} --server=${OSE_API} --token=${API_TOKEN} -n ${PROJECT_NAME} exec ${DB_POD} -- ${MYSQL_DUMP_BIN} -u root --all-databases --result-file=${BACKUP_LOC}/full-backup.${CURRENT_TIME}.sql
 
 echo MySQL backup completed.
 echo

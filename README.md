@@ -51,13 +51,13 @@ The configuration information can be passed in via two methods
 | OSE_API | https://10.1.1.2:8443 | The OpenShift master API hostname:port |
 | PROJECT_NAME | msyql-db-project | The namespace of your OpenShift project running the MySQL pod |
 | POD_SELECTOR | mysql-55-centos7 | This is the OpenShift deployment config associated with MySQL pod. This is used to determine the name of the pod inside the script |
-| APIT_TOKEN | eyJhbGciOiJS... | The API token associated with the service account. Used to authenticate the script against OpenShift |
+| VERIFY_API_TLS | yes or no | Helpful if you are going against a self-signed certificate associated with the API |
+| API_TOKEN | eyJhbGciOiJS... | The API token associated with the service account. Used to authenticate the script against OpenShift |
 
 
 # Future Improvements
 
-* Add option for `insecure-skip-tls-verify` on the oc call to the OpenShift API.
 * The permissions given to the service account seem heavy handed. Need to restrict the account further to just `rsh`.
 * Error checking on the `oc` calls
 * remove the need for oc binary and use `curl` instead to call the OpenShift API.
-* mail on success or failure.
+* A option to mail on success or failure. Helpful for `crond` scheduling on a host not in OpenShift.
