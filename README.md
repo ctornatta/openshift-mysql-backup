@@ -9,20 +9,27 @@ In order for you to initiate a backup through the OpenShift API you need to crea
 
 Note: The follow steps need access to the oc binary.
 
-## Create the service account
+## Service account creation
+
+create the service account:
+
 ```
 echo '{"apiVersion":"v1","kind":"ServiceAccount","metadata":{"name":"scheduled-cron"}}' | oc create -f -
 ```
-## add the permission
+
+Add the permission:
+
 ```
  oc policy add-role-to-user edit system:serviceaccount:`oc project -q`:scheduled-cron
 ```
-## get the API Token associated with the service account
+
+Get the API Token associated with the service account:
 ```
 SA_TOKEN=$(oc get sa/scheduled-cron --template='{{range .secrets}}{{printf "%s\n" .name}}{{end}}' | grep scheduled-cron-token |  tail -n 1)
 API_TOKEN=$(oc get secrets ${SA_TOKEN} --template '{{.data.token}}' | base64 -d)
 ```
-## Echo the value for the configuration file or environment variable.
+Echo the value for the configuration file or environment variable:
+
 ```
 echo $API_TOKEN
 ```
