@@ -5,6 +5,7 @@
 #Ensure that the oc binary is in your path
 
 # takes defaults for prefix, database,etc..
+BACKUP_LOC=${BACKUP_LOC:-/var/lib/mysql/data/backups}
 DB_BACKUP_NAME_PREFIX=${DB_BACKUP_NAME_PREFIX:-MySQL-backup}
 DATABASES=${DATABASES:-all}
 VERIFY_API_TLS=${VERIFY_API_TLS:-yes}
@@ -21,12 +22,12 @@ if [ -e "`dirname "$0"`/.openshift-mysql-backup.config" ] ; then
   source "`dirname "$0"`/.openshift-mysql-backup.config"
 
 else
-  echo configuration file does not exist. read values from enviornment variables.
+  echo configuration file does not exist. read values from environment variables.
 fi
 
 
 # Ensure that all needed configuration variables exist.
-if [ -n "${BACKUP_LOC}" -a -n "${MYSQL_DUMP_BIN}" -a -n "${OSE_API}" -a -n "${PROJECT_NAME}" -a -n "${POD_SELECTOR}" -a -n "${API_TOKEN}" ] ; then
+if [ -n "${OSE_API}" -a -n "${PROJECT_NAME}" -a -n "${POD_SELECTOR}" -a -n "${API_TOKEN}" ] ; then
     echo Validation of configuration variables passed..
 else
     echo Missing configuration values. Bailing...
@@ -40,8 +41,6 @@ else
   echo Verifying OpenShift API TLS
   API_TLS=""
 fi
-
-
 
 # get the current time
 CURRENT_TIME=$(date "+%Y.%m.%d-%H.%M.%S")
@@ -74,10 +73,10 @@ oc ${API_TLS} --server=${OSE_API} --token=${API_TOKEN} -n ${PROJECT_NAME} exec $
 
 if [ "$DATABASES" != "all" ] ; then
   echo Peforming backup of the following databases: $DATABASES
-  oc ${API_TLS} --server=${OSE_API} --token=${API_TOKEN} -n ${PROJECT_NAME} exec ${DB_POD} -- ${MYSQL_DUMP_BIN} -u root --databases $DATABASES --result-file=${BACKUP_LOC}/${DB_BACKUP_NAME_PREFIX}.${CURRENT_TIME}.sql
+  oc ${API_TLS} --server=${OSE_API} --token=${API_TOKEN} -n ${PROJECT_NAME} exec ${DB_POD} -- /bin/bash -c "mysqldump -u root --databases $DATABASES --result-file=${BACKUP_LOC}/${DB_BACKUP_NAME_PREFIX}.${CURRENT_TIME}.sql"
 else
   echo Performing backup of all databases.
-  oc ${API_TLS} --server=${OSE_API} --token=${API_TOKEN} -n ${PROJECT_NAME} exec ${DB_POD} -- ${MYSQL_DUMP_BIN} -u root --all-databases --result-file=${BACKUP_LOC}/${DB_BACKUP_NAME_PREFIX}.${CURRENT_TIME}.sql
+  oc ${API_TLS} --server=${OSE_API} --token=${API_TOKEN} -n ${PROJECT_NAME} exec ${DB_POD} -- /bin/bash -c "mysqldump -u root --events --all-databases --result-file=${BACKUP_LOC}/${DB_BACKUP_NAME_PREFIX}.${CURRENT_TIME}.sql"
 fi
 
 # Check the exit code of the oc exec command.

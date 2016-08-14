@@ -47,14 +47,13 @@ The configuration information can be passed in via two methods
 | Name | Example Value | Description |
 | ---- | ----- | ----------- |
 | BACKUP_LOC | /var/lib/mysql/data/backups | The location of the MySQL backup folder. You want this location to be backed up to a persistent volume |
-| MYSQL_DUMP_BIN | CentOS: /opt/rh/mysql55/root/usr/bin/mysqldump <br> RHEL7: /opt/rh/rh-mysql56/root/usr/bin/mysqldump | The location of the MySQL dump binary in the image. Location can change depending on what MySQL image you are using. |
 | OSE_API | https://10.1.1.2:8443 | The OpenShift master API hostname:port |
 | PROJECT_NAME | msyql-db-project | The namespace of your OpenShift project running the MySQL pod |
 | POD_SELECTOR | mysql-55-centos7 | This is the OpenShift deployment config associated with MySQL pod. This is used to determine the name of the pod inside the script |
 | VERIFY_API_TLS | yes or no | Helpful if you are going against a self-signed certificate associated with the API |
 | API_TOKEN | eyJhbGciOiJS... | The API token associated with the service account. Used to authenticate the script against OpenShift |
-| DB_BACKUP_NAME_PREFIX | MySQLBackupCustom | Used if you want to have a custom name for your backup file |
-| DATABASES | db1 db2 | A list of database to be backed up seperated by a white space |
+| DB_BACKUP_NAME_PREFIX | MySQLBackupCustom | Used if you want a custom name for your backup file |
+| DATABASES | db1 db2 | A list of database to be backed up separated by a white space. If you want all databases backed up use "all" |
 
 
 # Future Improvements
