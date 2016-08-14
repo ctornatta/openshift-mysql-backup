@@ -23,7 +23,6 @@ fi
 if [ -e "`dirname "$0"`/.openshift-mysql-backup.config" ] ; then
   echo Reading from configuration file.
   source "`dirname "$0"`/.openshift-mysql-backup.config"
-
 else
   echo configuration file does not exist. read values from environment variables.
 fi
@@ -73,7 +72,7 @@ DB_POD=$(oc ${API_TLS} --server=${OSE_API} --token=${API_TOKEN} -n ${PROJECT_NAM
 
 # Create backup folder if it does not already exist
 oc ${API_TLS} --server=${OSE_API} --token=${API_TOKEN} -n ${PROJECT_NAME} exec ${DB_POD} -- \
-  /bin/bash -c "if [ ! -d $BACKUP_LOC ] ; then echo Creating backup directory ; mkdir -p ${BACKUP_LOC} ; ls -al ${BACKUP_LOC} ; fi"
+  /bin/bash -c "if [ ! -d $BACKUP_LOC ] ; then echo Creating backup directory ${BACKUP_LOC} ; mkdir -p ${BACKUP_LOC} ;  fi"
 
 # Set the location and filename of the MySQL dump.
 MYSQL_DUMP_FILENAME="${BACKUP_LOC}/${DB_BACKUP_NAME_PREFIX}.${CURRENT_TIME}.sql"
