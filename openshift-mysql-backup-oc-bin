@@ -73,10 +73,10 @@ oc ${API_TLS} --server=${OSE_API} --token=${API_TOKEN} -n ${PROJECT_NAME} exec $
 
 if [ "$DATABASES" != "all" ] ; then
   echo Peforming backup of the following databases: $DATABASES
-  oc ${API_TLS} --server=${OSE_API} --token=${API_TOKEN} -n ${PROJECT_NAME} exec ${DB_POD} -- /bin/bash -c "mysqldump -u root --databases $DATABASES --result-file=${BACKUP_LOC}/${DB_BACKUP_NAME_PREFIX}.${CURRENT_TIME}.sql"
+  oc ${API_TLS} --server=${OSE_API} --token=${API_TOKEN} -n ${PROJECT_NAME} exec ${DB_POD} -- /bin/bash -c "mysqldump -u root --databases $DATABASES | gzip > ${BACKUP_LOC}/${DB_BACKUP_NAME_PREFIX}.${CURRENT_TIME}.sql.gz"
 else
   echo Performing backup of all databases.
-  oc ${API_TLS} --server=${OSE_API} --token=${API_TOKEN} -n ${PROJECT_NAME} exec ${DB_POD} -- /bin/bash -c "mysqldump -u root --events --all-databases --result-file=${BACKUP_LOC}/${DB_BACKUP_NAME_PREFIX}.${CURRENT_TIME}.sql"
+  oc ${API_TLS} --server=${OSE_API} --token=${API_TOKEN} -n ${PROJECT_NAME} exec ${DB_POD} -- /bin/bash -c "mysqldump -u root --events --all-databases | gzip > ${BACKUP_LOC}/${DB_BACKUP_NAME_PREFIX}.${CURRENT_TIME}.sql.gz"
 fi
 
 # Check the exit code of the oc exec command.
@@ -86,6 +86,7 @@ if [ "$?" == "1" ] ; then
   exit 1
 fi
 
-echo MySQL backup completed.
+echo MySQL backup completed. Backup written to the following location.
+echo "  $DB_POD:${BACKUP_LOC}/${DB_BACKUP_NAME_PREFIX}.${CURRENT_TIME}.sql.gz"
 echo
 exit 0

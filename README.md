@@ -1,5 +1,5 @@
 # openshift-mysql-backup
-Shell script to backup your OpenShift MySQL database
+Shell script to backup your OpenShift MySQL database into a compressed .sql backup file.
 
 This script has been tested against OpenShift v3.1+
 
@@ -58,6 +58,7 @@ The configuration information can be passed in via two methods
 
 # Future Improvements
 
+* Option to compress the backup.
 * The permissions given to the service account seem heavy handed. Need to restrict the account further to just `rsh`.
 * A option to mail on success or failure. Helpful for `crond` scheduling on a host not in OpenShift.
 * build CentOS/RHEL 7 builder image that allows you to run this script as a container in OpenShift inside your project
