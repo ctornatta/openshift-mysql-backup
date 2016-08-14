@@ -2,7 +2,6 @@
 # This script initiates a mysqldump inside the MySQL container using the OpenShift "oc" binary.
 # Important: Ensure that you are backing up into a persistent volume.
 
-#Ensure that the oc binary is in your path
 
 # takes defaults for prefix, database,etc..
 BACKUP_LOC=${BACKUP_LOC:-/var/lib/mysql/data/backups}
@@ -10,6 +9,7 @@ DB_BACKUP_NAME_PREFIX=${DB_BACKUP_NAME_PREFIX:-MySQL-backup}
 DATABASES=${DATABASES:-all}
 VERIFY_API_TLS=${VERIFY_API_TLS:-yes}
 
+#Ensure that the oc binary is in your path
 oc version >> /dev/null 2>&1
 if [ "$?" -gt "0" ] ; then
   printf "\nEnsure that the \"oc\" command is in your PATH"
