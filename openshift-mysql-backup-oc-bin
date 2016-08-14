@@ -2,17 +2,20 @@
 # This script initiates a mysqldump inside the MySQL container using the OpenShift "oc" binary.
 # Important: Ensure that you are backing up into a persistent volume.
 
-
 # takes defaults for prefix, database,etc..
 BACKUP_LOC=${BACKUP_LOC:-/var/lib/mysql/data/backups}
 DB_BACKUP_NAME_PREFIX=${DB_BACKUP_NAME_PREFIX:-MySQL-backup}
 DATABASES=${DATABASES:-all}
 VERIFY_API_TLS=${VERIFY_API_TLS:-yes}
+ENABLE_COMPRESSION=${ENABLE_COMPRESSION:-yes}
 
 #Ensure that the oc binary is in your path
 oc version >> /dev/null 2>&1
-if [ "$?" -gt "0" ] ; then
-  printf "\nEnsure that the \"oc\" command is in your PATH"
+if [ $? -ne 0 ] ; then
+  echo
+  echo Ensure that the \"oc\" command is in your PATH
+  echo
+
   exit 1
 fi
 
@@ -53,6 +56,7 @@ echo MySQL Backup location: $BACKUP_LOC
 echo OpenShift project name: $PROJECT_NAME
 echo OpenShift mysql pod: $POD_SELECTOR
 echo Verify API TLS: $VERIFY_API_TLS
+echo MySQL backup compression: $ENABLE_COMPRESSION
 echo MySQL Backup name prefix: $DB_BACKUP_NAME_PREFIX
 echo MySQL databases to backup: $DATABASES
 #Uncomment if needed
@@ -68,24 +72,39 @@ echo
 DB_POD=$(oc ${API_TLS} --server=${OSE_API} --token=${API_TOKEN} -n ${PROJECT_NAME} get pods -l deploymentconfig=${POD_SELECTOR} --no-headers | awk '{print $1}')
 
 # Create backup folder if it does not already exist
-oc ${API_TLS} --server=${OSE_API} --token=${API_TOKEN} -n ${PROJECT_NAME} exec ${DB_POD} -- /bin/bash -c "if [ ! -d $BACKUP_LOC ] ; then echo Creating backup directory ; mkdir -p ${BACKUP_LOC} ; ls -al ${BACKUP_LOC} ; fi"
+oc ${API_TLS} --server=${OSE_API} --token=${API_TOKEN} -n ${PROJECT_NAME} exec ${DB_POD} -- \
+  /bin/bash -c "if [ ! -d $BACKUP_LOC ] ; then echo Creating backup directory ; mkdir -p ${BACKUP_LOC} ; ls -al ${BACKUP_LOC} ; fi"
 
-if [ "$DATABASES" != "all" ] ; then
-  echo Peforming backup of the following databases: $DATABASES
-  oc ${API_TLS} --server=${OSE_API} --token=${API_TOKEN} -n ${PROJECT_NAME} exec ${DB_POD} -- /bin/bash -c "mysqldump -u root --databases $DATABASES | gzip > ${BACKUP_LOC}/${DB_BACKUP_NAME_PREFIX}.${CURRENT_TIME}.sql.gz"
+# Set the location and filename of the MySQL dump.
+MYSQL_DUMP_FILENAME="${BACKUP_LOC}/${DB_BACKUP_NAME_PREFIX}.${CURRENT_TIME}.sql"
+
+# Generate mysqldump command
+if [ "$DATABASES" == "all" ] ; then
+  PAR_DATABASES="--events --all-databases"
 else
-  echo Performing backup of all databases.
-  oc ${API_TLS} --server=${OSE_API} --token=${API_TOKEN} -n ${PROJECT_NAME} exec ${DB_POD} -- /bin/bash -c "mysqldump -u root --events --all-databases | gzip > ${BACKUP_LOC}/${DB_BACKUP_NAME_PREFIX}.${CURRENT_TIME}.sql.gz"
+  PAR_DATABASES="--databases $DATABASES"
 fi
 
-# Check the exit code of the oc exec command.
-if [ "$?" == "1" ] ; then
+if [ "$ENABLE_COMPRESSION" == "yes" ] ; then
+  # Append .gz to filename
+  MYSQL_DUMP_FILENAME="$MYSQL_DUMP_FILENAME.gz"
+
+  PAR_OUTPUT="| gzip > $MYSQL_DUMP_FILENAME"
+else
+  PAR_OUTPUT="--result-file=$MYSQL_DUMP_FILENAME"
+fi
+
+# Run backup
+oc ${API_TLS} --server=${OSE_API} --token=${API_TOKEN} -n ${PROJECT_NAME} exec ${DB_POD} -- /bin/bash -c "mysqldump -u root ${PAR_DATABASES} ${PAR_OUTPUT}"
+
+# echeck the exist code of the mysqldump command. 0 is a success.
+if [ $? -ne 0 ]; then
   echo MySQL backup failed.
   echo
   exit 1
 fi
 
 echo MySQL backup completed. Backup written to the following location.
-echo "  $DB_POD:${BACKUP_LOC}/${DB_BACKUP_NAME_PREFIX}.${CURRENT_TIME}.sql.gz"
+echo "  $MYSQL_DUMP_FILENAME"
 echo
 exit 0
