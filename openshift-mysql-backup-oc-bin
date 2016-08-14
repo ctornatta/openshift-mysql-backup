@@ -50,7 +50,6 @@ echo Starting execution at: $CURRENT_TIME
 echo Configuration information
 echo ---------------------------------------
 echo MySQL Backup location: $BACKUP_LOC
-echo MysQL mysql dump binary: $MYSQL_DUMP_BIN
 echo OpenShift project name: $PROJECT_NAME
 echo OpenShift mysql pod: $POD_SELECTOR
 echo Verify API TLS: $VERIFY_API_TLS
