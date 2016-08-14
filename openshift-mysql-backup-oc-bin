@@ -3,6 +3,12 @@
 # Important: Ensure that you are backing up into a persistent volume.
 
 #Ensure that the oc binary is in your path
+
+# takes defaults for prefix, database,etc..
+DB_BACKUP_NAME_PREFIX=${DB_BACKUP_NAME_PREFIX:-MySQL-backup}
+DATABASES=${DATABASES:-all}
+VERIFY_API_TLS=${VERIFY_API_TLS:-yes}
+
 oc version >> /dev/null 2>&1
 if [ "$?" -gt "0" ] ; then
   printf "\nEnsure that the \"oc\" command is in your PATH"
@@ -19,8 +25,8 @@ else
 fi
 
 
-# Ensure that all configuration variables exist.
-if [ -n "${BACKUP_LOC}" -a -n "${MYSQL_DUMP_BIN}" -a -n "${OSE_API}" -a -n "${PROJECT_NAME}" -a -n "${POD_SELECTOR}" -a -n "${API_TOKEN}" -a -n "${VERIFY_API_TLS}" ] ; then
+# Ensure that all needed configuration variables exist.
+if [ -n "${BACKUP_LOC}" -a -n "${MYSQL_DUMP_BIN}" -a -n "${OSE_API}" -a -n "${PROJECT_NAME}" -a -n "${POD_SELECTOR}" -a -n "${API_TOKEN}" ] ; then
     echo Validation of configuration variables passed..
 else
     echo Missing configuration values. Bailing...
@@ -49,6 +55,8 @@ echo MysQL mysql dump binary: $MYSQL_DUMP_BIN
 echo OpenShift project name: $PROJECT_NAME
 echo OpenShift mysql pod: $POD_SELECTOR
 echo Verify API TLS: $VERIFY_API_TLS
+echo MySQL Backup name prefix: $DB_BACKUP_NAME_PREFIX
+echo MySQL databases to backup: $DATABASES
 #Uncomment if needed
 #echo OpenShift project API token: $API_TOKEN
 echo ---------------------------------------
@@ -64,8 +72,20 @@ DB_POD=$(oc ${API_TLS} --server=${OSE_API} --token=${API_TOKEN} -n ${PROJECT_NAM
 # Create backup folder if it does not already exist
 oc ${API_TLS} --server=${OSE_API} --token=${API_TOKEN} -n ${PROJECT_NAME} exec ${DB_POD} -- /bin/bash -c "if [ ! -d $BACKUP_LOC ] ; then echo Creating backup directory ; mkdir -p ${BACKUP_LOC} ; ls -al ${BACKUP_LOC} ; fi"
 
-# Dump all the databases
-oc ${API_TLS} --server=${OSE_API} --token=${API_TOKEN} -n ${PROJECT_NAME} exec ${DB_POD} -- ${MYSQL_DUMP_BIN} -u root --all-databases --result-file=${BACKUP_LOC}/full-backup.${CURRENT_TIME}.sql
+if [ "$DATABASES" != "all" ] ; then
+  echo Peforming backup of the following databases: $DATABASES
+  oc ${API_TLS} --server=${OSE_API} --token=${API_TOKEN} -n ${PROJECT_NAME} exec ${DB_POD} -- ${MYSQL_DUMP_BIN} -u root --databases $DATABASES --result-file=${BACKUP_LOC}/${DB_BACKUP_NAME_PREFIX}.${CURRENT_TIME}.sql
+else
+  echo Performing backup of all databases.
+  oc ${API_TLS} --server=${OSE_API} --token=${API_TOKEN} -n ${PROJECT_NAME} exec ${DB_POD} -- ${MYSQL_DUMP_BIN} -u root --all-databases --result-file=${BACKUP_LOC}/${DB_BACKUP_NAME_PREFIX}.${CURRENT_TIME}.sql
+fi
+
+# Check the exit code of the oc exec command.
+if [ "$?" == "1" ] ; then
+  echo MySQL backup failed.
+  echo
+  exit 1
+fi
 
 echo MySQL backup completed.
 echo

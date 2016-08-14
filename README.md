@@ -53,13 +53,15 @@ The configuration information can be passed in via two methods
 | POD_SELECTOR | mysql-55-centos7 | This is the OpenShift deployment config associated with MySQL pod. This is used to determine the name of the pod inside the script |
 | VERIFY_API_TLS | yes or no | Helpful if you are going against a self-signed certificate associated with the API |
 | API_TOKEN | eyJhbGciOiJS... | The API token associated with the service account. Used to authenticate the script against OpenShift |
+| DB_BACKUP_NAME_PREFIX | MySQLBackupCustom | Used if you want to have a custom name for your backup file |
+| DATABASES | db1 db2 | A list of database to be backed up seperated by a white space |
 
 
 # Future Improvements
 
 * The permissions given to the service account seem heavy handed. Need to restrict the account further to just `rsh`.
-* Error checking on the `oc` calls
 * A option to mail on success or failure. Helpful for `crond` scheduling on a host not in OpenShift.
+* build CentOS/RHEL 7 builder image that allows you to run this script as a container in OpenShift inside your project
 * (ON HOLD) remove the need for oc binary and use `curl` instead to call the OpenShift API.
 
 # Using curl notes
