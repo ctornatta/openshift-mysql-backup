@@ -1,7 +1,7 @@
 # openshift-mysql-backup
 Shell script to backup your OpenShift MySQL database into a compressed .sql backup file.
 
-This script has been tested against OpenShift v3.1+
+This script has been tested against OpenShift v3.1+. Red Hat has a document on performing backup and it is located [here](https://docs.openshift.com/container-platform/3.11/dev_guide/migrating_applications/database_applications.html) 
 
 # OpenShift project Setup information
 
